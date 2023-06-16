@@ -14,8 +14,7 @@ Al dar click en una figura se pondra en blanco y negro, es un indicador para no 
 
 El boton Generar Imagenes creara un archivo .png por cada tabla generada en la ruta ./tablas/
 
-![image](https://github.com/voidexiled/Tablas-loteria/assets/44355453/00a988cd-df63-42b3-8e90-79f3acb34a0a)
-
+![image](https://github.com/voidexiled/Tablas-loteria/assets/44355453/8daef187-7fe5-4968-ba27-143d67b9590b)
 
 Para eliminar la informacion guardada de las tablas que no se deben repetir se debe borrar el archivo matrices_guardadas.txt y la carpeta tablas/
 
