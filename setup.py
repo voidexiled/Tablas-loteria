@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 
 build_exe_options = {
     "packages": ["numpy", "tkinter", "PIL"],
-    "include_files": ["assets"],
+    "include_files": ["assets", "matrices_guardadas.txt"],
 }
 
 base = None

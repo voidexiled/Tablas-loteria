@@ -3,6 +3,7 @@ import numpy as np
 import tkinter as tk
 from PIL import Image, ImageTk
 import json
+import os
 
 
 class CustomLabel(tk.Label):
@@ -102,15 +103,25 @@ def on_image_click(event):
     label.is_bn = is_bn
 
 
-def mostrar_tabla(tabla):
-    root = tk.Tk()
-    root.title("Tabla de Lotería")
+def mostrar_tabla(tabla, only_img: bool = False):
+    if os.path.exists("tablas") == False:
+        os.mkdir("tablas")
+
+    if not only_img:
+        root = tk.Tk()
+        root.title("Tabla de Lotería")
 
     num_filas = len(tabla)
     num_columnas = len(tabla[0])
     ventana_ancho = num_columnas * 100
     ventana_alto = num_filas * 140
-    root.geometry(f"{ventana_ancho+(num_columnas*5)}x{ventana_alto+(num_filas*5)}")
+    if not only_img:
+        root.geometry(f"{ventana_ancho+(num_columnas*5)}x{ventana_alto+(num_filas*5)}")
+    local_image = Image.new(
+        "RGB",
+        (ventana_ancho, ventana_alto),
+        (255, 255, 255),
+    )
 
     for i in range(num_filas):
         for j in range(num_columnas):
@@ -118,19 +129,28 @@ def mostrar_tabla(tabla):
             ruta_imagen = data[figura]
             imagen = Image.open(ruta_imagen)
             imagen = imagen.resize((100, 140), Image.LANCZOS)
+            local_image.paste(imagen, (j * 100, i * 140))
+            if not only_img:
+                label = CustomLabel(root)
+                label.grid(row=i, column=j)
+                label.image_path = ruta_imagen
+                imagen_tk = ImageTk.PhotoImage(imagen)
+                label.configure(image=imagen_tk)
+                label.image = imagen_tk
+                label.bind("<Button-1>", on_image_click)
 
-            label = CustomLabel(root)
-            label.grid(row=i, column=j)
+    if not only_img:
+        center_window(root)
+    num = 0
+    try:
+        with open("matrices_guardadas.txt", "r") as archivo:
+            num = len(archivo.readlines())
+    except FileNotFoundError:
+        pass
 
-            label.image_path = ruta_imagen
-
-            imagen_tk = ImageTk.PhotoImage(imagen)
-            label.configure(image=imagen_tk)
-            label.image = imagen_tk
-
-            label.bind("<Button-1>", on_image_click)
-    center_window(root)
-    root.mainloop()
+    local_image.save(f"tablas/tabla{num}_{num_filas}x{num_columnas}.png")
+    if not only_img:
+        root.mainloop()
 
 
 def generar_matriz_aleatoria(n, m):
@@ -158,7 +178,7 @@ def generar_matriz_aleatoria(n, m):
 
 
 def guardar_matriz(matriz):
-    with open("matrices_guardadas.json", "a", encoding="utf-8") as archivo:
+    with open("matrices_guardadas.txt", "a", encoding="utf-8") as archivo:
         json.dump(matriz.tolist(), archivo, ensure_ascii=False)
         archivo.write("\n")
 
@@ -175,10 +195,10 @@ def cargar_matrices_guardadas():
     return matrices
 
 
-def generar_tablas(size: int, num_tables: int):
+def generar_tablas(size: int, num_tables: int, only_img: bool = False):
     for _ in range(num_tables):
         tabla = generar_matriz_aleatoria(size, size)
-        mostrar_tabla(tabla)
+        mostrar_tabla(tabla, only_img)
         print("\n")
     return True
 
@@ -188,10 +208,14 @@ if __name__ == "__main__":
     root.title("Generador de tablas de lotería")
     size = [0]
     num_tables = [0]
+    global image
+    image = False
 
-    def start_generation():
+    def start_generation(only_img: bool = False):
         size[0] = int(size_entry.get())
         num_tables[0] = int(num_tables_entry.get())
+        global image
+        image = only_img
         root.destroy()
 
     size_label = tk.Label(root, text="Tamaño de la tabla:")
@@ -208,8 +232,13 @@ if __name__ == "__main__":
 
     start_button = tk.Button(root, text="Comenzar generación", command=start_generation)
     start_button.pack()
+    only_generate_button = tk.Button(
+        root, text="Generar Imagenes", command=lambda: start_generation(only_img=True)
+    )
+    only_generate_button.pack()
     center_window(root)
     root.mainloop()
 
     if size[0] > 0 and num_tables[0] > 0:
-        generar_tablas(size[0], num_tables[0])
+        print(image)
+        generar_tablas(size[0], num_tables[0], only_img=image)
