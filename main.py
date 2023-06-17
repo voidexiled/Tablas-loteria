@@ -1,9 +1,11 @@
 import random
 import numpy as np
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import json
 import os
+WIDTH_FIGURE = 53
+HEIGHT_FIGURE = int(WIDTH_FIGURE*1.5)
 
 
 class CustomLabel(tk.Label):
@@ -95,7 +97,7 @@ def on_image_click(event):
 
     image = Image.open(image_path)
     filtered_image = apply_filter(image, is_bn)
-    filtered_image = filtered_image.resize((100, 140), Image.LANCZOS)
+    filtered_image = filtered_image.resize((WIDTH_FIGURE, HEIGHT_FIGURE), Image.LANCZOS)
 
     filtered_image_tk = ImageTk.PhotoImage(filtered_image)
     label.configure(image=filtered_image_tk)
@@ -113,13 +115,13 @@ def mostrar_tabla(tabla, only_img: bool = False):
 
     num_filas = len(tabla)
     num_columnas = len(tabla[0])
-    ventana_ancho = num_columnas * 100
-    ventana_alto = num_filas * 140
+    ventana_ancho = num_columnas * WIDTH_FIGURE
+    ventana_alto = num_filas * HEIGHT_FIGURE
     if not only_img:
         root.geometry(f"{ventana_ancho+(num_columnas*5)}x{ventana_alto+(num_filas*5)}")
     local_image = Image.new(
         "RGB",
-        (ventana_ancho, ventana_alto),
+        (800, 1200),
         (255, 255, 255),
     )
 
@@ -128,8 +130,12 @@ def mostrar_tabla(tabla, only_img: bool = False):
             figura = tabla[i][j]
             ruta_imagen = data[figura]
             imagen = Image.open(ruta_imagen)
-            imagen = imagen.resize((100, 140), Image.LANCZOS)
-            local_image.paste(imagen, (j * 100, i * 140))
+            imagen = imagen.resize((int(800/num_columnas), int(1200/num_filas)), Image.LANCZOS)
+            draw = ImageDraw.Draw(imagen)
+            draw.rectangle((0, 0, int(800/num_columnas), int(1200/num_filas)), outline=(0, 0, 0), width=2)
+            #imagen.save(f"tablas/{figura}.jpg", quality=95, optimize=True, dpi=(96,96))s
+            local_image.paste(imagen, (j * int(800/num_columnas), i * int(1200/num_filas)))
+            
             if not only_img:
                 label = CustomLabel(root)
                 label.grid(row=i, column=j)
@@ -147,8 +153,8 @@ def mostrar_tabla(tabla, only_img: bool = False):
             num = len(archivo.readlines())
     except FileNotFoundError:
         pass
-
-    local_image.save(f"tablas/tabla{num}_{num_filas}x{num_columnas}.png")
+    
+    local_image.save(f"tablas/tabla{num}_{num_filas}x{num_columnas}.jpg", quality=95, optimize=True, dpi=(96,96))
     if not only_img:
         root.mainloop()
 
